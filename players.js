@@ -224,7 +224,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     const pick = (v) => { inp.value = v; close(); inp.dispatchEvent(new Event('change')); if (id === 'q-team') { document.getElementById('q-player').value = ''; } };
     const open = () => {
       const q = inp.value.trim().toLowerCase();
-      const items = getItems(q).slice(0, 60);
+      const items = getItems(q).slice(0, 600);
       ul.replaceChildren(...items.map((v) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = v; li.addEventListener('click', () => pick(v)); return li; }));
       if (!items.length) { close(); return; }
       ul.hidden = false; inp.setAttribute('aria-expanded', 'true'); act = -1; fit();
