@@ -1,6 +1,7 @@
 [build]
   publish = "."
 
+# Data files change daily; always revalidate. Service worker must never be cached stale.
 [[headers]]
   for = "/data/*"
   [headers.values]
@@ -11,8 +12,14 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Security headers for every page
 [[headers]]
   for = "/*"
   [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-Mgx4i2Q4zI+h3aywE1Iu1mPeT0yHhCgc7kCv5KF7w+Y=' 'sha256-XVojGPOb2mrEcqpr9N5vuUjNRC6pSXZkSTl0KDzZmMQ=' 'sha256-z/5PYJDRqhIyJ5FMy8Q7T5C9bN1q9LuPaLLibBq2UFo=' 'sha256-BYgK+D0BjX2LuDp5woZnBwSUZpyOqkXut/quJ5HQAXs='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+    X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Cross-Origin-Opener-Policy = "same-origin"
