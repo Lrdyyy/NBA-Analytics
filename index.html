@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NBA Analytics</title>
+<meta name="description" content="NBA team defense & offense analytics, matchup projections and player last-10 logs.">
+<meta name="theme-color" content="#1a1a19">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NBA Analytics">
+<link rel="stylesheet" href="app.css">
+<script src="vendor/d3.v7.min.js"></script>
+<script src="dash.js"></script>
+</head>
+<body>
+<div class="wrap">
+<div class="hb">
+  <header id="top">
+    <h1>NBA Analytics 2026-27: Defense &amp; Offense</h1>
+    <p class="sub">All 30 teams, season to date · Players: Lakers, Spurs, Knicks, 76ers, Warriors, Raptors &amp; Pistons, last 10 games each · refreshed daily by 3 PM PH time</p>
+    <p class="updated" id="updated"></p>
+  </header>
+
+  <div class="tabs cat" role="tablist">
+    <button class="tab" role="tab" data-cat="teams" aria-selected="true">Teams</button>
+    <button class="tab" role="tab" data-cat="players" aria-selected="false">Players</button>
+  </div>
+
+  <div class="catpanel" data-catpanel="teams">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="defense" aria-selected="true">Defense</button>
+    <button class="tab" role="tab" data-tab="offense" aria-selected="false">Offense</button>
+  </div>
+
+  <div class="panel" id="defense" data-panel="defense">
+    <details class="card fold" id="def-dive" open>
+      <summary><h2>Team defense deep dive</h2></summary>
+      <div class="row"><select class="dash-select" data-draw="def_pick" aria-label="Team"></select><span class="sub">Ranks out of 30 · green = top 10, red = bottom 10</span></div>
+      <div data-draw="def_dive"></div>
+    </details>
+
+    <details class="card fold" id="lookup" open>
+      <summary><h2>Matchup lookup</h2></summary>
+      <p class="sub">Pick two teams to see who has the edge on offense and defense. For player vs team, use the Players tab.</p>
+      <div class="row" style="margin-top: var(--cds-gap-sm)">
+        <select class="dash-select" data-draw="lk_a" aria-label="Team"></select>
+        <span class="sub">vs</span>
+        <select class="dash-select" data-draw="lk_b" aria-label="Opponent"></select>
+      </div>
+      <div data-draw="lk_out"></div>
+    </details>
+
+    <details class="card fold" id="def-ranking">
+      <summary><h2>Defensive efficiency, best to worst</h2></summary>
+      <p class="sub">Points allowed per 100 possessions, shown as a % (lower is better). Dashed line = league average. Tap a bar for that team's deep dive.</p>
+      <div class="chartbox" data-draw="def_rank"></div>
+    </details>
+
+    <details class="card fold" id="def-table">
+      <summary><h2>All 30 defenses side by side</h2></summary>
+      <p class="sub">Tap a column header to sort.</p>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th data-k="name">Team</th><th data-k="drtg">Def. eff.</th><th data-k="pts">Opp PPG</th><th data-k="efg">Opp eFG%</th><th data-k="twop">Opp 2P%</th><th data-k="tpp">Opp 3P%</th><th data-k="tpar">Opp 3PA rate</th><th data-k="ftr">Opp FT rate</th><th data-k="tov">Forced TOV%</th><th data-k="orb">Opp OREB</th><th data-k="biggest_hole">Biggest hole</th>
+          </tr></thead>
+          <tbody data-draw="def_tbody"></tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel" id="offense" data-panel="offense" hidden>
+    <details class="card fold" id="off-dive" open>
+      <summary><h2>Team offense deep dive</h2></summary>
+      <div class="row"><select class="dash-select" data-draw="off_pick" aria-label="Team"></select><span class="sub">Ranks out of 30 · green = top 10, red = bottom 10</span></div>
+      <div data-draw="off_dive"></div>
+    </details>
+
+    <details class="card fold" id="off-ranking">
+      <summary><h2>Offensive efficiency, best to worst</h2></summary>
+      <p class="sub">Points scored per 100 possessions, shown as a % (higher is better). Dashed line = league average. Tap a bar for that team's deep dive.</p>
+      <div class="chartbox" data-draw="off_rank"></div>
+    </details>
+
+    <details class="card fold" id="off-table">
+      <summary><h2>All 30 offenses side by side</h2></summary>
+      <p class="sub">Tap a column header to sort.</p>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th data-k="name">Team</th><th data-k="ortg">Off. eff.</th><th data-k="pts">PPG</th><th data-k="efg">eFG%</th><th data-k="ts">TS%</th><th data-k="twop">2P%</th><th data-k="tpp">3P%</th><th data-k="tpar">3PA rate</th><th data-k="ftr">FT rate</th><th data-k="tovp">TOV%</th><th data-k="pace">Pace</th><th data-k="biggest_hole">Biggest hole</th>
+          </tr></thead>
+          <tbody data-draw="off_tbody"></tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+  </div>
+
+  <div class="catpanel" id="players" data-catpanel="players" hidden>
+    <section class="card" id="pl-search">
+      <h2>Quick check</h2>
+      <p class="sub">Type a team and a player, then tap Show. If both match, you get his last-10 points, rebounds, assists, threes, steals, blocks and minutes.</p>
+      <div class="row" style="margin-top: var(--cds-gap-sm)">
+        <input class="qin" id="q-team" list="q-team-list" placeholder="Team (e.g. Spurs or SAS)" aria-label="Team" autocomplete="off">
+        <datalist id="q-team-list" data-draw="q_team_list"></datalist>
+        <input class="qin" id="q-player" list="q-player-list" placeholder="Player (e.g. Wembanyama)" aria-label="Player" autocomplete="off">
+        <datalist id="q-player-list" data-draw="q_player_list"></datalist>
+        <button class="qbtn" id="q-go" type="button">Show</button>
+      </div>
+      <div data-draw="q_out"></div>
+      <h3>Over / under, game by game</h3>
+      <div class="row">
+        <select class="qin" id="q-stat" aria-label="Stat type">
+          <option value="pts">Points</option><option value="reb">Rebounds</option><option value="ast">Assists</option><option value="pra">Pts + Reb + Ast</option><option value="tpm">3s made</option><option value="tpa">3s attempted</option><option value="stl">Steals</option><option value="blk">Blocks</option><option value="min">Minutes</option>
+        </select>
+        <input class="qin" id="q-line" type="number" inputmode="decimal" step="0.5" min="0" placeholder="Over/under line, e.g. 14.5" aria-label="Over/under line">
+      </div>
+      <div class="chartbox plchart" data-draw="q_ou"></div>
+    </section>
+
+    <section class="card" id="pl-player">
+      <h2>Player stats vs each team</h2>
+      <p class="sub">Last 10 games · pick a team, then a player, then an opponent to see only those games.</p>
+      <div class="row" style="margin-top: var(--cds-gap-sm)">
+        <select class="dash-select" data-draw="pl_team" aria-label="Team"></select>
+        <select class="dash-select" data-draw="pl_pick" aria-label="Player"></select>
+        <span class="sub">vs</span>
+        <select class="dash-select" data-draw="pl_opp" aria-label="Opponent"></select>
+      </div>
+      <p class="lede" data-draw="pl_summary">—</p>
+      <div class="tiles" data-draw="pl_tiles"></div>
+      <div class="row">
+        <h3 id="pl-chart-title">Game by game, by opponent</h3>
+        <select class="dash-select" data-draw="pl_metric" aria-label="Stat to chart"></select>
+      </div>
+      <div class="chartbox plchart" data-draw="pl_chart"></div>
+      <p class="sub">Red = opponent has a top-10 defense · green = bottom-10 defense · dashed line = his last-10 average</p>
+    </section>
+
+    <section class="card" id="pl-gamelog">
+      <h2>Game log</h2>
+      <p class="sub">Opponent defense rank is out of 30 (1 = stingiest).</p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Date</th><th>Opp</th><th>H/A</th><th>Result</th><th>Opp D rank</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>3PM</th><th>3PA</th><th>STL</th><th>BLK</th></tr></thead>
+          <tbody data-draw="pl_log"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="pl-roster">
+      <h2>Whole rotation, last-10 averages</h2>
+      <p class="sub">Per game played. Tap a column header to sort; tap a name to open that player above.</p>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th data-pk="player">Player</th><th data-pk="gp">GP</th><th data-pk="min">MIN</th><th data-pk="pts">PTS</th><th data-pk="reb">REB</th><th data-pk="ast">AST</th><th data-pk="tpm">3PM</th><th data-pk="tpa">3PA</th><th data-pk="tpp">3P%</th><th data-pk="stl">STL</th><th data-pk="blk">BLK</th>
+          </tr></thead>
+          <tbody data-draw="pl_roster"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <details id="notes">
+    <summary>How these numbers are worked out</summary>
+    <p><b>Defense:</b> ESPN team opponent stats. Defensive efficiency = opponent points ÷ estimated possessions (FGA + 0.44 × FTA − OREB + TOV) × 100, shown as a %. <b>Offense:</b> efficiency, pace, eFG%, TS%, turnover % and assist ratio are NBA.com numbers via Hoops Nightly; shot volumes are from StatMuse and ESPN. Some teams' shot mix is estimated from their shooting percentages (flagged on their deep dive).</p>
+    <p><b>Matchup edge</b> compares the attacking team's offense rank with the defending team's rank in the same area (1 = best on each side). The better rank gets the edge; within 5 spots is "even".</p>
+    <p><b>NBA Projected Game Score</b> uses your formula with season-to-date numbers: a = Team 1 offensive efficiency × its possessions, x = Team 1 defensive efficiency × its possessions (same for Team 2 as b and y), then ((a + x) + (b + y)) ÷ 2.</p>
+    <p><b>Players</b> cover the Lakers, Spurs, Knicks, 76ers, Warriors, Raptors and Pistons — each team's last 10 games (box scores from FantasyData, SI, ESPN, NBA.com and CBS; every game checked so player points add up to the final score). Minutes are rounded.</p>
+  </details>
+</div>
+</div>
+
+<script>
+{
+const H = window.HB = { tab: 'defense', a: 'LAL', b: '', sel: { def: 'LAL', off: 'LAL' }, sort: { def: ['drtg', true], off: ['ortg', false] } };
+H.P = (v) => (v == null ? 'n/a' : (+v).toFixed(1) + '%');
+H.N = (v) => (v == null ? 'n/a' : (+v).toFixed(1));
+H.C = (rk) => (rk == null ? 'mid' : rk <= 10 ? 'good' : rk >= 21 ? 'bad' : 'mid');
+H.el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+H.M = (text) => { const s = document.createElement('span'); s.textContent = text; return s; };
+H.rows = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) && d.data.length ? d.data : null; };
+
+dash.calc('matchup_proj', {
+  inputs: ['offense'],
+  fn: (offense) => {
+    const out = [];
+    offense.forEach((t1) => offense.forEach((t2) => {
+      if (t1.team === t2.team) return;
+      const a = t1.ortg / 100 * t1.pace, x = t1.drtg_nba / 100 * t1.pace, b = t2.ortg / 100 * t2.pace, y = t2.drtg_nba / 100 * t2.pace;
+      const r = (v) => Math.round(v * 100) / 100;
+      out.push({ pair: t1.team + '-' + t2.team, a: r(a), x: r(x), b: r(b), y: r(y), t1_total: r(a + x), t2_total: r(b + y), projected: r(((a + x) + (b + y)) / 2) });
+    }));
+    return out;
+  }
+});
+
+dash.calc('player_avgs', {
+  inputs: ['lakers_log'],
+  fn: (log) => {
+    const by = {};
+    log.forEach((r) => { (by[r.player] = by[r.player] || []).push(r); });
+    const avg = (g, k) => Math.round(g.reduce((s, r) => s + Number(r[k]), 0) / g.length * 10) / 10;
+    return Object.entries(by).map(([player, g]) => ({ player, team: g[0].team, gp: g.length, min: avg(g, 'min'), pts: avg(g, 'pts'), reb: avg(g, 'reb'), ast: avg(g, 'ast'), tpm: avg(g, 'tpm'), tpa: avg(g, 'tpa'), tpp: (() => { const m = g.reduce((s, r) => s + Number(r.tpm), 0), a = g.reduce((s, r) => s + Number(r.tpa), 0); return a ? Math.round(m / a * 1000) / 10 : null; })(), stl: avg(g, 'stl'), blk: avg(g, 'blk') }));
+  }
+});
+
+H.showTab = (name) => {
+  H.tab = name;
+  document.querySelectorAll('.hb [data-tab]').forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
+  document.querySelectorAll('.hb [data-panel]').forEach((p) => { p.hidden = p.getAttribute('data-panel') !== name; });
+  dash.setLink(name);
+  dash.redrawAll();
+};
+document.querySelectorAll('.hb [data-tab]').forEach((b) => b.addEventListener('click', () => H.showTab(b.getAttribute('data-tab'))));
+if (location.hash === '#offense') H.showTab('offense');
+}
+</script>
+
+<script>
+{
+/* Matchup lookup */
+const H = window.HB;
+dash.draw('lk_a', (sel) => {
+  const t = H.rows('teams'); if (!t) { sel.replaceChildren(); return; }
+  sel.replaceChildren(...t.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => new Option(r.name, r.team)));
+  sel.value = H.a; sel.onchange = () => H.setTeam(sel.value);
+});
+/* One team drives the matchup lookup and both deep dives */
+H.setTeam = (v) => { H.a = v; H.sel.def = v; H.sel.off = v; ['lk_a', 'lk_out', 'def_pick', 'def_dive', 'off_pick', 'off_dive'].forEach((n) => dash.draw(n)); };
+dash.draw('lk_b', (sel) => {
+  const t = H.rows('teams'); if (!t) { sel.replaceChildren(); return; }
+  sel.replaceChildren(...t.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => new Option(r.name, r.team)));
+  const ph = new Option('Pick an opponent…', ''); ph.disabled = true; sel.prepend(ph);
+  sel.value = H.b; sel.classList.toggle('ph', !H.b); sel.onchange = () => { H.b = sel.value; sel.classList.toggle('ph', !H.b); dash.draw('lk_out'); };
+});
+
+H.edge = (ork, drk) => (ork == null || drk == null ? ['n/a', 'mid'] : Math.abs(ork - drk) <= 5 ? ['Even', 'mid'] : ork < drk ? ['Offense', 'good'] : ['Defense', 'bad']);
+H.matchTable = (O, D) => {
+  const rows = [
+    ['Efficiency', 'ortg', 'ortg_rk', 'drtg', 'drtg_rk', H.P],
+    ['Shot-making (eFG%)', 'efg', 'efg_rk', 'efg', 'efg_rk', H.P],
+    ['2P% (inside the arc)', 'twop', 'twop_rk', 'twop', 'twop_rk', H.P],
+    ['3P%', 'tpp', 'tpp_rk', 'tpp', 'tpp_rk', H.P],
+    ['3s made / game', 'tpm', 'tpm_rk', 'tpm', 'tpm_rk', H.N],
+    ['Getting to the line (FT rate)', 'ftr', 'ftr_rk', 'ftr', 'ftr_rk', H.P],
+    ['Turnovers (off TOV% vs forced TOV%)', 'tovp', 'tovp_rk', 'tov', 'tov_rk', H.P],
+    ['Offensive rebounds / game', 'orb', 'orb_rk', 'orb', 'orb_rk', H.N]
+  ];
+  const wrap = H.el('div', 'tw'); const tb = H.el('table'); const th = H.el('thead'); const hr = H.el('tr');
+  ['Area', O.name + ' offense', 'Rank', D.name + ' defense', 'Rank', 'Edge'].forEach((t) => hr.append(H.el('th', null, t)));
+  th.append(hr); tb.append(th); const body = H.el('tbody');
+  rows.forEach(([lab, of, ork, df, drk, f]) => {
+    const tr = H.el('tr');
+    tr.append(H.el('td', null, lab));
+    tr.append(H.el('td', null, f(O[of])));
+    tr.append(H.el('td', H.C(O[ork]), O[ork] != null ? '#' + O[ork] : 'n/a'));
+    tr.append(H.el('td', null, f(D[df])));
+    tr.append(H.el('td', H.C(D[drk]), '#' + D[drk]));
+    const [e, c] = H.edge(O[ork], D[drk]); tr.append(H.el('td', c, e));
+    body.append(tr);
+  });
+  tb.append(body); wrap.append(tb); return wrap;
+};
+
+dash.draw('lk_out', (el) => {
+  const def = H.rows('teams'), off = H.rows('offense');
+  if (!def || !off) { el.textContent = '—'; return; }
+  el.replaceChildren();
+  if (!H.b) { el.append(H.el('p', 'sub', 'Pick an opponent above to see the projected score and who has the edge.')); return; }
+  const Bd = def.find((r) => r.team === H.b), Bo = off.find((r) => r.team === H.b);
+  const Ad = def.find((r) => r.team === H.a), Ao = off.find((r) => r.team === H.a);
+  if (H.a === H.b) { el.append(H.el('p', 'lede', 'Pick two different teams.')); return; }
+  const pr = H.rows('matchup_proj'); const P = pr && pr.find((r) => r.pair === H.a + '-' + H.b);
+  if (P) {
+    const box = H.el('div', 'tiles');
+    const t = (k, v) => { const d = H.el('div', 'tile'); d.append(H.el('div', 'k', k)); d.append(H.el('div', 'v', v)); return d; };
+    box.append(t('NBA Projected Game Score', P.projected.toFixed(2)), t(Ao.name + ' (a + x)', P.t1_total.toFixed(2)), t(Bo.name + ' (b + y)', P.t2_total.toFixed(2)));
+    el.append(box);
+  }
+  el.append(H.el('h3', null, 'When the ' + Ao.name + ' have the ball'), H.matchTable(Ao, Bd));
+  el.append(H.el('h3', null, 'When the ' + Bo.name + ' have the ball'), H.matchTable(Bo, Ad));
+  const cols = H.el('div', 'cols');
+  [[Ad, 'Where the ' + Ad.name + ' defense is weakest'], [Bd, 'Where the ' + Bd.name + ' defense is weakest']].forEach(([T, title]) => {
+    const box = H.el('div'); box.append(H.el('h3', null, title));
+    const ul = H.el('ul', 'lst bad'); String(T.weak).split('; ').forEach((s) => ul.append(H.el('li', null, s))); box.append(ul); cols.append(box);
+  });
+  el.append(cols);
+});
+}
+</script>
+
+<script>
+{
+/* Shared ranking chart, deep dive and table for both tabs */
+const H = window.HB;
+const CFG = {
+  def: { src: 'teams', eff: 'drtg', low: true, effName: 'Defensive efficiency', tip: (d) => `PPG allowed ${H.N(d.pts)} · weakest: ${d.biggest_hole}`,
+    lede: (r) => [r.name, ' rank ', '#' + r.drtg_rk, ' in defensive efficiency. Biggest hole: ', r.biggest_hole, '. Scored on most via ', r.scored_on_most, '.'],
+    tiles: [['Defensive efficiency', 'drtg', H.P], ['Points allowed / game', 'pts', H.N], ['Opp eFG%', 'efg', H.P], ['Opp 2P%', 'twop', H.P], ['Opp 3P%', 'tpp', H.P], ['3s made allowed', 'tpm', H.N], ['Opp 3PA rate', 'tpar', H.P], ['Opp FT rate (fouling)', 'ftr', H.P], ['Forced TOV%', 'tov', H.P], ['Opp off. rebounds', 'orb', H.N], ['Blocks / game', 'blk', H.N], ['Steals / game', 'stl', H.N]],
+    srcTitle: 'Where opponents score', lists: [['weak', 'Weak spots (ranked 21–30)', 'bad'], ['strong', 'Strengths (ranked 1–10)', 'good']],
+    cols: [['name', (r) => r.name], ['drtg', (r) => H.P(r.drtg), 'drtg_rk'], ['pts', (r) => H.N(r.pts), 'pts_rk'], ['efg', (r) => H.P(r.efg), 'efg_rk'], ['twop', (r) => H.P(r.twop), 'twop_rk'], ['tpp', (r) => H.P(r.tpp), 'tpp_rk'], ['tpar', (r) => H.P(r.tpar), 'tpar_rk'], ['ftr', (r) => H.P(r.ftr), 'ftr_rk'], ['tov', (r) => H.P(r.tov), 'tov_rk'], ['orb', (r) => H.N(r.orb), 'orb_rk'], ['biggest_hole', (r) => r.biggest_hole, null, true]] },
+  off: { src: 'offense', eff: 'ortg', low: false, effName: 'Offensive efficiency', tip: (d) => `${H.N(d.pts)} PPG · best: ${d.best_weapon}`,
+    lede: (r) => [r.name, ' (', r.record, ') rank ', '#' + r.ortg_rk, ' in offensive efficiency. Best weapon: ', r.best_weapon, '. Biggest hole: ', r.biggest_hole, '. Compared with the league, they lean on ', r.leans_on, '.'],
+    tiles: [['Offensive efficiency', 'ortg', H.P], ['Points / game', 'pts', H.N], ['eFG%', 'efg', H.P], ['True shooting', 'ts', H.P], ['2P%', 'twop', H.P], ['3P%', 'tpp', H.P], ['3s made / game', 'tpm', H.N], ['3PA rate', 'tpar', H.P], ['FT rate', 'ftr', H.P], ['Turnover % (lower better)', 'tovp', H.P], ['Off. rebounds / game', 'orb', H.N], ['Pace', 'pace', H.N]],
+    srcTitle: 'Where their points come from', lists: [['strong', 'Strengths (ranked 1–10)', 'good'], ['weak', 'Weak spots (ranked 21–30)', 'bad']],
+    cols: [['name', (r) => r.name], ['ortg', (r) => H.P(r.ortg), 'ortg_rk'], ['pts', (r) => H.N(r.pts), 'pts_rk'], ['efg', (r) => H.P(r.efg), 'efg_rk'], ['ts', (r) => H.P(r.ts), 'ts_rk'], ['twop', (r) => H.P(r.twop), 'twop_rk'], ['tpp', (r) => H.P(r.tpp), 'tpp_rk'], ['tpar', (r) => H.P(r.tpar)], ['ftr', (r) => H.P(r.ftr), 'ftr_rk'], ['tovp', (r) => H.P(r.tovp), 'tovp_rk'], ['pace', (r) => H.N(r.pace)], ['biggest_hole', (r) => r.biggest_hole, null, true]] }
+};
+H.sorted = (side) => { const c = CFG[side], t = H.rows(c.src); return t && t.slice().sort((a, b) => (c.low ? a[c.eff] - b[c.eff] : b[c.eff] - a[c.eff])); };
+
+['def', 'off'].forEach((side) => {
+  const c = CFG[side];
+  dash.draw(side + '_rank', (el) => {
+    const t = H.sorted(side);
+    if (!t) { el.textContent = dash.data(c.src).status === 'error' ? 'Failed to load' : '—'; return; }
+    if (!el.clientWidth) return;
+    el.replaceChildren();
+    const W = el.clientWidth, m = { t: 6, r: 52, b: 26, l: 46 }, Hh = m.t + m.b + 20 * t.length, x0 = 95;
+    const avg = d3.mean(t, (d) => +d[c.eff]);
+    const x = d3.scaleLinear().domain([x0, d3.max(t, (d) => +d[c.eff]) + 2]).range([m.l, W - m.r]);
+    const y = d3.scaleBand().domain(t.map((d) => d.team)).range([m.t, Hh - m.b]).padding(0.2);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', Hh).attr('viewBox', `0 0 ${W} ${Hh}`).attr('role', 'img').attr('aria-label', c.effName + ' for all 30 teams, best to worst');
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${Hh - m.b})`).call(d3.axisBottom(x).ticks(W < 500 ? 4 : 7).tickFormat((v) => v + '%'));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(0)).select('.domain').remove();
+    const rk = c.eff + '_rk';
+    const bars = svg.append('g').selectAll('rect').data(t).join('rect').attr('x', x(x0)).attr('y', (d) => y(d.team)).attr('height', y.bandwidth()).attr('width', (d) => Math.max(0, x(+d[c.eff]) - x(x0))).attr('rx', 2)
+      .style('fill', (d) => (d[rk] <= 10 ? 'var(--color-ok)' : d[rk] >= 21 ? 'var(--cds-chart-status-critical)' : dash.colors[0])).style('cursor', 'pointer');
+    svg.append('g').selectAll('text').data(t).join('text').attr('x', (d) => x(+d[c.eff]) + 4).attr('y', (d) => y(d.team) + y.bandwidth() / 2).attr('dy', '0.35em').style('fill', 'var(--cds-text-secondary)').style('font-size', '11px').text((d) => H.P(d[c.eff]));
+    svg.append('line').attr('x1', x(avg)).attr('x2', x(avg)).attr('y1', m.t).attr('y2', Hh - m.b).style('stroke', 'var(--cds-chart-reference)').style('stroke-dasharray', '4 3');
+    const tip = d3.select(el).append('div').attr('class', 'tip').style('display', 'none');
+    bars.on('pointermove', (ev, d) => { const [px, py] = d3.pointer(ev, el); tip.style('display', null).text(`${d.name} · #${d[rk]} · ${H.P(d[c.eff])} · ${c.tip(d)}`); const tw = tip.node().offsetWidth; tip.style('left', Math.max(0, Math.min(px + 10, el.clientWidth - tw)) + 'px').style('top', (py + 12) + 'px'); })
+      .on('pointerleave', () => tip.style('display', 'none'))
+      .on('click', (ev, d) => { H.setTeam(d.team); document.getElementById(side + '-dive').open = true; document.getElementById(side + '-dive').scrollIntoView({ behavior: 'smooth' }); });
+  });
+
+  dash.draw(side + '_pick', (sel) => {
+    const t = H.sorted(side); if (!t) { sel.replaceChildren(); return; }
+    if (!H.sel[side]) H.sel[side] = t[0].team;
+    sel.replaceChildren(...t.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => new Option(`${r.name} (#${r[c.eff + '_rk']})`, r.team)));
+    sel.value = H.sel[side]; sel.onchange = () => H.setTeam(sel.value);
+  });
+
+  dash.draw(side + '_dive', (el) => {
+    const t = H.sorted(side); if (!t) { el.textContent = '—'; return; }
+    const r = t.find((d) => d.team === H.sel[side]) || t[0];
+    el.replaceChildren();
+    const p = H.el('p', 'lede'); p.append(...c.lede(r).map(String)); el.append(p);
+    if (r.estimated === 'yes') el.append(H.el('p', 'sub', 'Shot-volume numbers for this team are estimated.'));
+    const tiles = H.el('div', 'tiles');
+    c.tiles.forEach(([k, f, fm]) => {
+      const d = H.el('div', 'tile'); d.append(H.el('div', 'k', k)); d.append(H.el('div', 'v', fm(r[f])));
+      const rk = r[f + '_rk']; d.append(H.el('div', 'r ' + H.C(rk), rk == null ? 'not ranked' : '#' + rk + ' of 30')); tiles.append(d);
+    });
+    el.append(tiles);
+    const cols = H.el('div', 'cols'), sb = H.el('div');
+    sb.append(H.el('h3', null, c.srcTitle), H.el('p', 'sub', 'Points per game by shot type, with share of total. Line = league average.'));
+    const maxV = Math.max(...t.map((d) => Math.max(+d.pts3, +d.pts2, +d.ptsft)));
+    [['3-pointers', 'pts3', 'sh3'], ['2-pointers', 'pts2', 'sh2'], ['Free throws', 'ptsft', 'shft']].forEach(([lab, f, sh]) => {
+      const row = H.el('div', 'srcrow'); row.append(H.el('div', null, lab + ' · ' + H.P(r[sh])));
+      const bar = H.el('div', 'bar'), fill = H.el('div', 'fill'), rk = r[f + '_rk'];
+      fill.style.width = (+r[f] / maxV * 100) + '%'; fill.style.background = rk <= 10 ? 'var(--color-ok)' : rk >= 21 ? 'var(--cds-chart-status-critical)' : dash.colors[0]; bar.append(fill);
+      const av = H.el('div', 'avg'); av.style.left = (d3.mean(t, (d) => +d[f]) / maxV * 100) + '%'; bar.append(av); row.append(bar);
+      const v = H.el('div'); v.append(H.N(r[f]) + ' '); v.append(H.el('span', H.C(rk), '(#' + rk + ')')); row.append(v);
+      sb.append(row);
+    });
+    cols.append(sb);
+    const lb = H.el('div');
+    c.lists.forEach(([f, title, cls]) => { lb.append(H.el('h3', null, title)); const ul = H.el('ul', 'lst ' + cls); String(r[f]).split('; ').forEach((s) => ul.append(H.el('li', null, s))); lb.append(ul); });
+    cols.append(lb); el.append(cols);
+  });
+
+  dash.draw(side + '_tbody', (tb) => {
+    const t = H.rows(c.src); if (!t) { tb.replaceChildren(); return; }
+    const [k, asc] = H.sort[side];
+    const rows = t.slice().sort((a, b) => { const x = a[k], y = b[k]; const v = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y)); return asc ? v : -v; });
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = H.el('tr');
+      c.cols.forEach(([f, fm, rk, wrap]) => tr.append(H.el('td', wrap ? 'wrap' : rk ? H.C(r[rk]) : null, fm(r))));
+      return tr;
+    }));
+  });
+});
+
+document.querySelectorAll('.hb th[data-k]').forEach((th) => th.addEventListener('click', () => {
+  const side = th.closest('[data-panel]').getAttribute('data-panel') === 'defense' ? 'def' : 'off';
+  const k = th.getAttribute('data-k'), cur = H.sort[side];
+  const ascFirst = side === 'def' ? ['name', 'drtg', 'pts', 'efg', 'twop', 'tpp', 'tpar', 'ftr', 'orb', 'biggest_hole'] : ['name', 'tovp', 'biggest_hole'];
+  H.sort[side] = cur[0] === k ? [k, !cur[1]] : [k, ascFirst.includes(k)];
+  dash.draw(side + '_tbody');
+}));
+}
+</script>
+<script src="players.js"></script>
+<script>
+dash.load();
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
