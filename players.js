@@ -218,7 +218,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     ul.addEventListener('mousedown', (ev) => ev.preventDefault());
     const fit = () => {
       const vv = window.visualViewport, top = inp.getBoundingClientRect().bottom, vh = vv ? vv.height : window.innerHeight;
-      ul.style.maxHeight = Math.max(120, Math.min(320, vh - top - 12)) + 'px';
+      ul.style.maxHeight = Math.max(180, Math.min(520, vh - top - 8)) + 'px';
     };
     const close = () => { ul.hidden = true; inp.setAttribute('aria-expanded', 'false'); act = -1; };
     const pick = (v) => { inp.value = v; close(); inp.dispatchEvent(new Event('change')); if (id === 'q-team') { document.getElementById('q-player').value = ''; } };
@@ -229,7 +229,9 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
       if (!items.length) { close(); return; }
       ul.hidden = false; inp.setAttribute('aria-expanded', 'true'); act = -1; fit();
     };
-    const lift = () => setTimeout(() => { inp.scrollIntoView({ block: 'start', behavior: 'smooth' }); setTimeout(fit, 350); }, 250);
+    const lift = () => setTimeout(() => { inp.scrollIntoView({ block: 'start', behavior: 'smooth' }); [300, 600, 1000].forEach((ms) => setTimeout(() => { if (!ul.hidden) fit(); }, ms)); }, 250);
+    window.addEventListener('scroll', () => { if (!ul.hidden) fit(); }, { passive: true });
+    window.addEventListener('resize', () => { if (!ul.hidden) fit(); });
     inp.addEventListener('focus', () => { open(); lift(); });
     inp.addEventListener('click', open);
     inp.addEventListener('input', open);
