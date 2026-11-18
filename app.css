@@ -83,7 +83,7 @@ select.qin { appearance: none; -webkit-appearance: none; background: var(--color
 
 .hb .cb { position: relative; flex: 1 1 160px; min-width: 0; }
 .hb .cb .qin { width: 100%; box-sizing: border-box; }
-.hb .cb-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; margin: 0; padding: 4px; list-style: none; overflow-y: auto; overscroll-behavior: contain; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.hb .cb-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; margin: 0; padding: 4px; list-style: none; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 .hb .cb-list[hidden] { display: none; }
 .hb .cb-list li { padding: 10px 12px; border-radius: 6px; cursor: pointer; color: var(--color-fg); }
 .hb .cb-list li:hover, .hb .cb-list li.on { background: rgba(255,255,255,.1); }

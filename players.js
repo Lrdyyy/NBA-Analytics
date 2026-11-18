@@ -215,6 +215,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     const ul = document.createElement('ul'); ul.className = 'cb-list'; ul.setAttribute('role', 'listbox'); ul.hidden = true; wrap.append(ul);
     inp.setAttribute('role', 'combobox'); inp.setAttribute('aria-autocomplete', 'list'); inp.setAttribute('aria-expanded', 'false');
     let act = -1;
+    ul.addEventListener('mousedown', (ev) => ev.preventDefault());
     const fit = () => {
       const vv = window.visualViewport, top = inp.getBoundingClientRect().bottom, vh = vv ? vv.height : window.innerHeight;
       ul.style.maxHeight = Math.max(120, Math.min(320, vh - top - 12)) + 'px';
@@ -224,7 +225,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     const open = () => {
       const q = inp.value.trim().toLowerCase();
       const items = getItems(q).slice(0, 60);
-      ul.replaceChildren(...items.map((v) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = v; li.addEventListener('pointerdown', (ev) => { ev.preventDefault(); pick(v); }); return li; }));
+      ul.replaceChildren(...items.map((v) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = v; li.addEventListener('click', () => pick(v)); return li; }));
       if (!items.length) { close(); return; }
       ul.hidden = false; inp.setAttribute('aria-expanded', 'true'); act = -1; fit();
     };
