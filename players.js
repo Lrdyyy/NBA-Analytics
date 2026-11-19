@@ -214,16 +214,16 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     inp.parentNode.insertBefore(wrap, inp); wrap.append(inp);
     const ul = document.createElement('ul'); ul.className = 'cb-list'; ul.setAttribute('role', 'listbox'); ul.hidden = true; wrap.append(ul);
     inp.setAttribute('role', 'combobox'); inp.setAttribute('aria-autocomplete', 'list'); inp.setAttribute('aria-expanded', 'false');
-    let act = -1;
+    let act = -1, typed = false;
     ul.addEventListener('mousedown', (ev) => ev.preventDefault());
     const fit = () => {
       const vv = window.visualViewport, top = inp.getBoundingClientRect().bottom, vh = vv ? vv.height : window.innerHeight;
       ul.style.maxHeight = Math.max(180, Math.min(520, vh - top - 8)) + 'px';
     };
     const close = () => { ul.hidden = true; inp.setAttribute('aria-expanded', 'false'); act = -1; };
-    const pick = (v) => { inp.value = v; close(); inp.dispatchEvent(new Event('change')); if (id === 'q-team') { document.getElementById('q-player').value = ''; } };
+    const pick = (v) => { inp.value = v; typed = false; close(); inp.dispatchEvent(new Event('change')); if (id === 'q-team') { document.getElementById('q-player').value = ''; } };
     const open = () => {
-      const q = inp.value.trim().toLowerCase();
+      const q = typed ? inp.value.trim().toLowerCase() : '';
       const items = getItems(q).slice(0, 600);
       ul.replaceChildren(...items.map((v) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = v; li.addEventListener('click', () => pick(v)); return li; }));
       if (!items.length) { close(); return; }
@@ -232,9 +232,9 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     const lift = () => setTimeout(() => { inp.scrollIntoView({ block: 'start', behavior: 'smooth' }); [300, 600, 1000].forEach((ms) => setTimeout(() => { if (!ul.hidden) fit(); }, ms)); }, 250);
     window.addEventListener('scroll', () => { if (!ul.hidden) fit(); }, { passive: true });
     window.addEventListener('resize', () => { if (!ul.hidden) fit(); });
-    inp.addEventListener('focus', () => { open(); lift(); });
-    inp.addEventListener('click', open);
-    inp.addEventListener('input', open);
+    inp.addEventListener('focus', () => { typed = false; open(); lift(); });
+    inp.addEventListener('click', () => { typed = false; open(); });
+    inp.addEventListener('input', () => { typed = true; open(); });
     inp.addEventListener('blur', () => setTimeout(close, 120));
     if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (!ul.hidden) fit(); });
     inp.addEventListener('keydown', (e) => {
