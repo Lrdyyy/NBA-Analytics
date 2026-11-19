@@ -179,7 +179,7 @@
 
 <script>
 {
-const H = window.HB = { tab: 'defense', a: 'LAL', b: '', sel: { def: 'LAL', off: 'LAL' }, sort: { def: ['drtg', true], off: ['ortg', false] } };
+const H = window.HB = { tab: 'defense', a: '', b: '', sel: { def: '', off: '' }, sort: { def: ['drtg', true], off: ['ortg', false] } };
 H.P = (v) => (v == null ? 'n/a' : (+v).toFixed(1) + '%');
 H.N = (v) => (v == null ? 'n/a' : (+v).toFixed(1));
 H.C = (rk) => (rk == null ? 'mid' : rk <= 10 ? 'good' : rk >= 21 ? 'bad' : 'mid');
@@ -230,7 +230,8 @@ const H = window.HB;
 dash.draw('lk_a', (sel) => {
   const t = H.rows('teams'); if (!t) { sel.replaceChildren(); return; }
   sel.replaceChildren(...t.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => new Option(r.name, r.team)));
-  sel.value = H.a; sel.onchange = () => H.setTeam(sel.value);
+  const ph = new Option('Pick a team…', ''); ph.disabled = true; sel.prepend(ph);
+  sel.value = H.a; sel.classList.toggle('ph', !H.a); sel.onchange = () => H.setTeam(sel.value);
 });
 /* One team drives the matchup lookup and both deep dives */
 H.setTeam = (v) => { H.a = v; H.sel.def = v; H.sel.off = v; ['lk_a', 'lk_out', 'def_pick', 'def_dive', 'off_pick', 'off_dive'].forEach((n) => dash.draw(n)); };
@@ -273,7 +274,7 @@ dash.draw('lk_out', (el) => {
   const def = H.rows('teams'), off = H.rows('offense');
   if (!def || !off) { el.textContent = '—'; return; }
   el.replaceChildren();
-  if (!H.b) { el.append(H.el('p', 'sub', 'Pick an opponent above to see the projected score and who has the edge.')); return; }
+  if (!H.a || !H.b) { el.append(H.el('p', 'sub', 'Pick a team and an opponent above to see the projected score and who has the edge.')); return; }
   const Bd = def.find((r) => r.team === H.b), Bo = off.find((r) => r.team === H.b);
   const Ad = def.find((r) => r.team === H.a), Ao = off.find((r) => r.team === H.a);
   if (H.a === H.b) { el.append(H.el('p', 'lede', 'Pick two different teams.')); return; }
@@ -341,15 +342,16 @@ H.sorted = (side) => { const c = CFG[side], t = H.rows(c.src); return t && t.sli
 
   dash.draw(side + '_pick', (sel) => {
     const t = H.sorted(side); if (!t) { sel.replaceChildren(); return; }
-    if (!H.sel[side]) H.sel[side] = t[0].team;
     sel.replaceChildren(...t.slice().sort((a, b) => a.name.localeCompare(b.name)).map((r) => new Option(`${r.name} (#${r[c.eff + '_rk']})`, r.team)));
-    sel.value = H.sel[side]; sel.onchange = () => H.setTeam(sel.value);
+    const ph = new Option('Pick a team…', ''); ph.disabled = true; sel.prepend(ph);
+    sel.value = H.sel[side]; sel.classList.toggle('ph', !H.sel[side]); sel.onchange = () => H.setTeam(sel.value);
   });
 
   dash.draw(side + '_dive', (el) => {
     const t = H.sorted(side); if (!t) { el.textContent = '—'; return; }
-    const r = t.find((d) => d.team === H.sel[side]) || t[0];
+    const r = t.find((d) => d.team === H.sel[side]);
     el.replaceChildren();
+    if (!r) { el.append(H.el('p', 'sub', 'Pick a team above to see its numbers.')); return; }
     const p = H.el('p', 'lede'); p.append(...c.lede(r).map(String)); el.append(p);
     if (r.estimated === 'yes') el.append(H.el('p', 'sub', 'Shot-volume numbers for this team are estimated.'));
     const tiles = H.el('div', 'tiles');
