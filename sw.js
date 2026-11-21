@@ -1,4 +1,5 @@
-const SHELL = 'nba-shell-v7';
+// Offline support: app shell from cache; data always tries the network first so daily updates show.
+const SHELL = 'nba-shell-v9';
 const FILES = ['./', 'index.html', 'app.css', 'dash.js', 'players.js', 'vendor/d3.v7.min.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(SHELL).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== SHELL && k !== 'nba-data').map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
