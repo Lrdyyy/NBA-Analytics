@@ -157,18 +157,20 @@ PL.findTeam = (raw) => {
     || PL.TEAMS.find(([, n]) => n.toLowerCase().includes(s))
     || PL.TEAMS.find(([, n]) => { const nick = n.toLowerCase().split(' ').pop(); return PL.lev(s, nick) <= 2; }) || null;
 };
+PL.fold = (x) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 PL.findPlayers = (team, raw) => {
-  const s = raw.trim().toLowerCase(), p = (H.rows('player_avgs') || []).filter((r) => r.team === team);
+  const s = PL.fold(raw.trim()), p = (H.rows('player_avgs') || []).filter((r) => r.team === team);
   if (!s) return [];
-  const exact = p.filter((r) => r.player.toLowerCase() === s); if (exact.length) return exact;
-  const sub = p.filter((r) => r.player.toLowerCase().includes(s)); if (sub.length) return sub;
-  return p.filter((r) => r.player.toLowerCase().split(' ').some((w) => PL.lev(s, w) <= 2) || PL.lev(s, r.player.toLowerCase()) <= 3);
+  const exact = p.filter((r) => PL.fold(r.player) === s); if (exact.length) return exact;
+  const sub = p.filter((r) => PL.fold(r.player).includes(s)); if (sub.length) return sub;
+  return p.filter((r) => PL.fold(r.player).split(' ').some((w) => PL.lev(s, w) <= 2) || PL.lev(s, PL.fold(r.player)) <= 3);
 };
 PL.runQ = () => { PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value }; 
 dash.draw('q_out'); dash.draw('q_ou'); };
 PL.qPlayer = () => { if (!PL.q.ran) return null; const tm = PL.findTeam(PL.q.t); if (!tm) return null; const f = PL.findPlayers(tm[0], PL.q.p); return f.length === 1 ? f[0] : null; };
 PL.OU = { pts: 'points', reb: 'rebounds', ast: 'assists', pra: 'pts + reb + ast', tpm: '3s made', tpa: '3s attempted', stl: 'steals', blk: 'blocks', min: 'minutes' };
 PL.val = (r, k) => (k === 'pra' ? +r.pts + +r.reb + +r.ast : +r[k]);
+document.getElementById('q-line').addEventListener('change', (e) => { const v = e.target.value; if (v !== '' && !isNaN(+v)) { e.target.value = Math.floor(+v) + 0.5; dash.draw('q_ou'); } });
 ['q-stat', 'q-line'].forEach((id) => document.getElementById(id).addEventListener('input', () => dash.draw('q_ou')));
 
 dash.draw('q_ou', (el) => {
@@ -179,7 +181,7 @@ dash.draw('q_ou', (el) => {
   const g = log.filter((r) => r.player === A.player).sort((a, b) => a.date.localeCompare(b.date));
   const avg = d3.mean(g, (r) => PL.val(r, k));
   const raw = document.getElementById('q-line').value, typed = raw !== '' && !isNaN(+raw);
-  const line = typed ? +raw : Math.round(avg * 2) / 2;
+  const line = typed ? Math.floor(+raw) + 0.5 : Math.floor(avg) + 0.5;
   const over = g.filter((r) => PL.val(r, k) > line).length, under = g.filter((r) => PL.val(r, k) < line).length, push = g.length - over - under;
   const s = H.el('p', 'lede');
   s.append(`${A.player} vs ${line} ${lab}${typed ? '' : ' (his average, rounded — type your own line)'}: `);
@@ -248,7 +250,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
   mk('q-player', (q) => {
     const p = H.rows('player_avgs'); if (!p) return [];
     const t = PL.findTeam(document.getElementById('q-team').value || '');
-    return p.filter((r) => (!t || r.team === t[0]) && (!q || r.player.toLowerCase().includes(q))).sort((a, b) => b.gp * b.min - a.gp * a.min).map((r) => r.player);
+    return p.filter((r) => (!t || r.team === t[0]) && (!q || PL.fold(r.player).includes(PL.fold(q)))).sort((a, b) => b.gp * b.min - a.gp * a.min).map((r) => r.player);
   });
 })();
 
