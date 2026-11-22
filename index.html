@@ -42,6 +42,7 @@
       <summary><h2>Team defense deep dive</h2></summary>
       <div class="row"><select class="dash-select" data-draw="def_pick" aria-label="Team"></select><span class="sub">Ranks out of 30 · green = top 10, red = bottom 10</span></div>
       <div data-draw="def_dive"></div>
+      <div data-draw="def_pos"></div>
     </details>
 
     <details class="card fold" id="lookup" open>
@@ -53,25 +54,6 @@
         <select class="dash-select" data-draw="lk_b" aria-label="Opponent"></select>
       </div>
       <div data-draw="lk_out"></div>
-    </details>
-
-    <details class="card fold" id="def-ranking">
-      <summary><h2>Defensive efficiency, best to worst</h2></summary>
-      <p class="sub">Points allowed per 100 possessions, shown as a % (lower is better). Dashed line = league average. Tap a bar for that team's deep dive.</p>
-      <div class="chartbox" data-draw="def_rank"></div>
-    </details>
-
-    <details class="card fold" id="def-table">
-      <summary><h2>All 30 defenses side by side</h2></summary>
-      <p class="sub">Tap a column header to sort.</p>
-      <div class="tw">
-        <table>
-          <thead><tr>
-            <th data-k="name">Team</th><th data-k="drtg">Def. eff.</th><th data-k="pts">Opp PPG</th><th data-k="efg">Opp eFG%</th><th data-k="twop">Opp 2P%</th><th data-k="tpp">Opp 3P%</th><th data-k="tpar">Opp 3PA rate</th><th data-k="ftr">Opp FT rate</th><th data-k="tov">Forced TOV%</th><th data-k="orb">Opp OREB</th><th data-k="biggest_hole">Biggest hole</th>
-          </tr></thead>
-          <tbody data-draw="def_tbody"></tbody>
-        </table>
-      </div>
     </details>
   </div>
 
@@ -118,7 +100,7 @@
         <select class="qin" id="q-stat" aria-label="Stat type">
           <option value="pts">Points</option><option value="reb">Rebounds</option><option value="ast">Assists</option><option value="pra">Pts + Reb + Ast</option><option value="tpm">3s made</option><option value="tpa">3s attempted</option><option value="stl">Steals</option><option value="blk">Blocks</option><option value="min">Minutes</option>
         </select>
-        <input class="qin" id="q-line" type="number" inputmode="decimal" step="0.5" min="0" placeholder="Over/under line, e.g. 14.5" aria-label="Over/under line">
+        <input class="qin" id="q-line" type="number" inputmode="decimal" step="1" min="0.5" placeholder="Over/under line, e.g. 14.5" aria-label="Over/under line">
       </div>
       <div class="chartbox plchart" data-draw="q_ou"></div>
     </section>
@@ -399,6 +381,7 @@ document.querySelectorAll('.hb th[data-k]').forEach((th) => th.addEventListener(
 }
 </script>
 <script src="players.js"></script>
+<script src="defpos.js"></script>
 <script>
 dash.load();
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
