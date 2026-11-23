@@ -63,6 +63,7 @@
       <summary><h2>Team offense deep dive</h2></summary>
       <div class="row"><select class="dash-select" data-draw="off_pick" aria-label="Team"></select><span class="sub">Ranks out of 30 · green = top 10, red = bottom 10</span></div>
       <div data-draw="off_dive"></div>
+      <div data-draw="off_leaders"></div>
     </details>
 
     <details class="card fold" id="off-ranking">
@@ -99,9 +100,14 @@
       <h3>Over / under, game by game</h3>
       <div class="row">
         <select class="qin" id="q-stat" aria-label="Stat type">
-          <option value="pts">Points</option><option value="reb">Rebounds</option><option value="ast">Assists</option><option value="pra">Pts + Reb + Ast</option><option value="tpm">3s made</option><option value="tpa">3s attempted</option><option value="stl">Steals</option><option value="blk">Blocks</option><option value="min">Minutes</option>
+          <option value="pts">Points</option><option value="reb">Rebounds</option><option value="ast">Assists</option><option value="pr">Pts + Reb</option><option value="ar">Ast + Reb</option><option value="pra">Pts + Reb + Ast</option><option value="tpm">3-pt made</option><option value="tpa">3-pt attempts</option><option value="stl">Steals</option><option value="blk">Blocks</option><option value="min">Minutes</option>
         </select>
-        <input class="qin" id="q-line" type="number" inputmode="decimal" step="1" min="0.5" placeholder="Over/under line, e.g. 14.5" aria-label="Over/under line">
+        <div class="qin linebox">
+          <button class="step" id="q-minus" type="button" aria-label="Lower the line by 1">−</button>
+          <input id="q-line" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="Line" aria-label="Over/under line, whole number (the .5 is added for you)">
+          <span class="half" aria-hidden="true">.5</span>
+          <button class="step" id="q-plus" type="button" aria-label="Raise the line by 1">+</button>
+        </div>
       </div>
       <div class="chartbox plchart" data-draw="q_ou"></div>
     </section>
@@ -383,6 +389,7 @@ document.querySelectorAll('.hb th[data-k]').forEach((th) => th.addEventListener(
 </script>
 <script src="players.js"></script>
 <script src="defpos.js"></script>
+<script src="leaders.js"></script>
 <script>
 dash.load();
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

@@ -87,3 +87,32 @@ select.qin { appearance: none; -webkit-appearance: none; background: var(--color
 .hb .cb-list[hidden] { display: none; }
 .hb .cb-list li { padding: 10px 12px; border-radius: 6px; cursor: pointer; color: var(--color-fg); }
 .hb .cb-list li:hover, .hb .cb-list li.on { background: rgba(255,255,255,.1); }
+
+/* Distinct focus border */
+.hb .qin:focus, .hb .qin:focus-visible, .hb select:focus-visible, .hb .dash-select:focus-visible { outline: none; border-color: #ffb000; box-shadow: 0 0 0 3px rgba(255,176,0,.35); }
+
+/* Easier-to-see inputs: darker fill than the card + a clear border */
+.hb .qin, .hb .dash-select, .hb select.qin { background-color: #111110; border: 1.5px solid #8b8880; color: var(--color-fg); }
+.hb .qin::placeholder { color: #a09d94; opacity: 1; }
+.hb select option { background: #1a1a19; color: var(--color-fg); }
+.hb .cb-list { background: #151514; border: 1.5px solid #8b8880; }
+.hb .qin:focus, .hb .qin:focus-visible, .hb select:focus-visible, .hb .dash-select:focus-visible, .hb .linebox:focus-within { outline: none; border-color: #ffb000; box-shadow: 0 0 0 3px rgba(255,176,0,.35); }
+
+/* Over/under line box: type the whole number, the .5 is fixed */
+.hb .linebox { display: flex; align-items: center; justify-content: center; gap: 2px; flex: 1 1 160px; padding: 0 4px; box-sizing: border-box; }
+.hb .linebox input { font: inherit; font-size: 1.1em; font-variant-numeric: tabular-nums; width: 2.6ch; padding: var(--cds-pad-sm) 0; border: none; background: none; color: var(--color-fg); text-align: right; outline: none; min-width: 0; }
+.hb .linebox input::placeholder { text-align: right; }
+.hb .linebox .half { font-size: 1.1em; color: var(--color-fg); font-variant-numeric: tabular-nums; padding-right: 6px; }
+.hb .linebox .step { font: inherit; font-size: 1.25em; line-height: 1; width: 34px; height: 34px; border-radius: 8px; border: 1px solid #5c5a54; background: #262624; color: var(--color-fg); cursor: pointer; }
+.hb .linebox .step:active { background: #3a3936; }
+
+/* Team leaders (offense tab) */
+.hb .leaders { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: var(--cds-gap-sm); margin: var(--cds-gap-sm) 0; }
+.hb .lead { border: 1px solid #5c5a54; border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); background: #1f1f1d; }
+.hb .lead .k { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); margin-bottom: 2px; }
+.hb .lead .p { display: grid; grid-template-columns: 1.4em 1fr auto; gap: 4px; align-items: baseline; padding: 3px 0; font-variant-numeric: tabular-nums; border-top: 1px solid var(--color-border-line); }
+.hb .lead .p:first-of-type { border-top: none; }
+.hb .lead .p .n { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.hb .lead .p .v { font-family: var(--font-anthropic-serif); font-size: 1.15em; }
+.hb .lead .p.top .nm { font-weight: 700; }
+.hb .lead .none { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 4px 0; }

@@ -2,7 +2,7 @@
 const H = window.HB;
 const PL = H.plx = { team: '', sel: null, opp: '', metric: 'pts', sort: ['min', false] };
 PL.TEAMS = [['LAL', 'Los Angeles Lakers'], ['SAS', 'San Antonio Spurs'], ['NYK', 'New York Knicks'], ['PHI', 'Philadelphia 76ers'], ['GSW', 'Golden State Warriors'], ['TOR', 'Toronto Raptors'], ['DET', 'Detroit Pistons'], ['BOS', 'Boston Celtics'], ['ATL', 'Atlanta Hawks'], ['BKN', 'Brooklyn Nets'], ['CHA', 'Charlotte Hornets'], ['CHI', 'Chicago Bulls'], ['CLE', 'Cleveland Cavaliers'], ['DAL', 'Dallas Mavericks'], ['DEN', 'Denver Nuggets'], ['HOU', 'Houston Rockets'], ['IND', 'Indiana Pacers'], ['LAC', 'LA Clippers'], ['MEM', 'Memphis Grizzlies'], ['MIA', 'Miami Heat'], ['MIL', 'Milwaukee Bucks'], ['MIN', 'Minnesota Timberwolves'], ['NOP', 'New Orleans Pelicans'], ['OKC', 'Oklahoma City Thunder'], ['ORL', 'Orlando Magic'], ['PHX', 'Phoenix Suns'], ['POR', 'Portland Trail Blazers'], ['SAC', 'Sacramento Kings'], ['UTA', 'Utah Jazz'], ['WAS', 'Washington Wizards']];
-PL.METRICS = [['pts', 'Points'], ['reb', 'Rebounds'], ['ast', 'Assists'], ['tpm', '3s made'], ['tpa', '3s attempted'], ['stl', 'Steals'], ['blk', 'Blocks'], ['min', 'Minutes']];
+PL.METRICS = [['pts', 'Points'], ['reb', 'Rebounds'], ['ast', 'Assists'], ['tpm', '3-pt made'], ['tpa', '3-pt attempts'], ['stl', 'Steals'], ['blk', 'Blocks'], ['min', 'Minutes']];
 PL.fmtDate = (s) => d3.utcFormat('%b %-d')(new Date(s + 'T00:00:00Z'));
 PL.players = () => { const p = H.rows('player_avgs'); return p && p.filter((r) => !PL.team || r.team === PL.team).sort((x, y) => y.gp * y.min - x.gp * x.min); };
 PL.games = (all) => { const d = H.rows('lakers_log'); if (!d) return null; return d.filter((r) => r.team === PL.team && r.player === PL.sel && (all || !PL.opp || r.opp === PL.opp)).sort((a, b) => a.date.localeCompare(b.date)); };
@@ -68,7 +68,7 @@ dash.draw('pl_tiles', (el) => {
   const p = PL.players(), r = p && PL.sel && p.find((x) => x.player === PL.sel);
   if (!r) { el.replaceChildren(); return; }
   const W = 'player=' + r.player;
-  el.replaceChildren(...[['Games played', 'gp', (v) => String(v)], ['Minutes', 'min', H.N], ['Points', 'pts', H.N], ['Rebounds', 'reb', H.N], ['Assists', 'ast', H.N], ['3s made', 'tpm', H.N], ['3s attempted', 'tpa', H.N], ['3P%', 'tpp', H.P], ['Steals', 'stl', H.N], ['Blocks', 'blk', H.N]].map(([k, f, fm]) => {
+  el.replaceChildren(...[['Games played', 'gp', (v) => String(v)], ['Minutes', 'min', H.N], ['Points', 'pts', H.N], ['Rebounds', 'reb', H.N], ['Assists', 'ast', H.N], ['3-pt made', 'tpm', H.N], ['3-pt attempts', 'tpa', H.N], ['3P%', 'tpp', H.P], ['Steals', 'stl', H.N], ['Blocks', 'blk', H.N]].map(([k, f, fm]) => {
     const d = H.el('div', 'tile'); d.append(H.el('div', 'k', k + (f === 'gp' ? '' : ' (last-10 avg)'))); const v = H.el('div', 'v'); v.append(H.M(fm(r[f]), 'player_avgs', f, W)); d.append(v); return d;
   }));
 });
@@ -165,13 +165,20 @@ PL.findPlayers = (team, raw) => {
   const sub = p.filter((r) => PL.fold(r.player).includes(s)); if (sub.length) return sub;
   return p.filter((r) => PL.fold(r.player).split(' ').some((w) => PL.lev(s, w) <= 2) || PL.lev(s, PL.fold(r.player)) <= 3);
 };
-PL.runQ = () => { PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value }; 
+PL.runQ = () => { PL.lineAuto = true; PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value }; 
 dash.draw('q_out'); dash.draw('q_ou'); };
 PL.qPlayer = () => { if (!PL.q.ran) return null; const tm = PL.findTeam(PL.q.t); if (!tm) return null; const f = PL.findPlayers(tm[0], PL.q.p); return f.length === 1 ? f[0] : null; };
-PL.OU = { pts: 'points', reb: 'rebounds', ast: 'assists', pra: 'pts + reb + ast', tpm: '3s made', tpa: '3s attempted', stl: 'steals', blk: 'blocks', min: 'minutes' };
-PL.val = (r, k) => (k === 'pra' ? +r.pts + +r.reb + +r.ast : +r[k]);
-document.getElementById('q-line').addEventListener('change', (e) => { const v = e.target.value; if (v !== '' && !isNaN(+v)) { e.target.value = Math.floor(+v) + 0.5; dash.draw('q_ou'); } });
-['q-stat', 'q-line'].forEach((id) => document.getElementById(id).addEventListener('input', () => dash.draw('q_ou')));
+PL.OU = { pts: 'points', reb: 'rebounds', ast: 'assists', pr: 'pts + reb', ar: 'ast + reb', pra: 'pts + reb + ast', tpm: '3-pt made', tpa: '3-pt attempts', stl: 'steals', blk: 'blocks', min: 'minutes' };
+PL.val = (r, k) => (k === 'pra' ? +r.pts + +r.reb + +r.ast : k === 'pr' ? +r.pts + +r.reb : k === 'ar' ? +r.ast + +r.reb : +r[k]);
+/* The line is always a whole number + .5 (the box shows a fixed ".5"), so you only type the whole number. */
+PL.lineAuto = true;   // fill the box with the player's average the next time the chart draws
+PL.lineVal = () => { const n = parseInt(document.getElementById('q-line').value, 10); return isNaN(n) ? null : Math.max(0, n) + 0.5; };
+PL.bump = (d) => { const n = parseInt(document.getElementById('q-line').value, 10); document.getElementById('q-line').value = String(Math.max(0, (isNaN(n) ? 0 : n) + d)); PL.lineAuto = false; dash.draw('q_ou'); };
+document.getElementById('q-line').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D.*$/, '').slice(0, 3); PL.lineAuto = false; dash.draw('q_ou'); });
+document.getElementById('q-line').addEventListener('keydown', (e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); PL.bump(e.key === 'ArrowUp' ? 1 : -1); } });
+document.getElementById('q-minus').addEventListener('click', () => PL.bump(-1));
+document.getElementById('q-plus').addEventListener('click', () => PL.bump(1));
+document.getElementById('q-stat').addEventListener('change', () => { PL.lineAuto = true; dash.draw('q_ou'); });
 
 dash.draw('q_ou', (el) => {
   el.replaceChildren();
@@ -180,11 +187,13 @@ dash.draw('q_ou', (el) => {
   const k = document.getElementById('q-stat').value, lab = PL.OU[k];
   const g = log.filter((r) => r.player === A.player).sort((a, b) => a.date.localeCompare(b.date));
   const avg = d3.mean(g, (r) => PL.val(r, k));
-  const raw = document.getElementById('q-line').value, typed = raw !== '' && !isNaN(+raw);
-  const line = typed ? Math.floor(+raw) + 0.5 : Math.floor(avg) + 0.5;
+  const box = document.getElementById('q-line');
+  if (PL.lineAuto) { box.value = String(Math.floor(avg)); PL.lineAuto = false; }
+  const typed = PL.lineVal() != null;
+  const line = typed ? PL.lineVal() : Math.floor(avg) + 0.5;
   const over = g.filter((r) => PL.val(r, k) > line).length, under = g.filter((r) => PL.val(r, k) < line).length, push = g.length - over - under;
   const s = H.el('p', 'lede');
-  s.append(`${A.player} vs ${line} ${lab}${typed ? '' : ' (his average, rounded — type your own line)'}: `);
+  s.append(`${A.player} vs ${line} ${lab}${typed ? '' : ' (his average, rounded)'}: `);
   s.append(H.el('b', 'good', `over in ${over} of ${g.length}`), ' (' + Math.round(over / g.length * 100) + '%) · ', H.el('b', 'bad', `under in ${under}`), push ? ` · ${push} push` : '', ` · his last-10 average is ${H.N(avg)}.`);
   el.append(s);
   const W = el.clientWidth || 360, Hh = 240, m = { t: 18, r: 8, b: 30, l: 34 };
