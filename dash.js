@@ -1,6 +1,6 @@
 /* Tiny stand-in for the Claude dashboard runtime: loads the data files, runs calcs, redraws. */
 window.dash = (() => {
-  const DATA = { teams: 'data/nba_defense_2026_27.json', offense: 'data/nba_offense_2026_27.json', lakers_log: 'data/players_last10.json', defpos: 'data/defense_by_position.json' };
+  const DATA = { teams: 'data/nba_defense_2026_27.json', offense: 'data/nba_offense_2026_27.json', lakers_log: 'data/players_last10.json', defpos: 'data/defense_by_position.json', shots: 'data/shots_last10.json' };
   const store = {}, calcs = {}, draws = {}, order = [];
   const api = {
     colors: ['var(--chart-1)'],

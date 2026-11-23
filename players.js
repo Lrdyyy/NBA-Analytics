@@ -6,7 +6,7 @@ PL.METRICS = [['pts', 'Points'], ['reb', 'Rebounds'], ['ast', 'Assists'], ['tpm'
 PL.fmtDate = (s) => d3.utcFormat('%b %-d')(new Date(s + 'T00:00:00Z'));
 PL.players = () => { const p = H.rows('player_avgs'); return p && p.filter((r) => !PL.team || r.team === PL.team).sort((x, y) => y.gp * y.min - x.gp * x.min); };
 PL.games = (all) => { const d = H.rows('lakers_log'); if (!d) return null; return d.filter((r) => r.team === PL.team && r.player === PL.sel && (all || !PL.opp || r.opp === PL.opp)).sort((a, b) => a.date.localeCompare(b.date)); };
-PL.redraw = () => ['pl_team', 'pl_pick', 'pl_opp', 'pl_summary', 'pl_tiles', 'pl_chart', 'pl_log'].forEach((n) => dash.draw(n));
+PL.redraw = () => ['pl_team', 'pl_pick', 'pl_opp', 'pl_summary', 'pl_tiles', 'pl_chart', 'pl_shots', 'pl_log'].forEach((n) => dash.draw(n));
 
 H.showCat = (name) => {
   document.querySelectorAll('.hb [data-cat]').forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-cat') === name ? 'true' : 'false'));
@@ -41,7 +41,7 @@ dash.draw('pl_opp', (sel) => {
   if (PL.opp && !seen.has(PL.opp)) PL.opp = '';
   sel.classList.toggle('ph', !PL.opp);
   sel.replaceChildren(new Option('Pick an opponent… (all games)', ''), ...[...seen.values()].sort((a, b) => a.opp_name.localeCompare(b.opp_name)).map((r) => new Option(`${r.opp_name} (D #${r.opp_def_rank})`, r.opp)));
-  sel.value = PL.opp; sel.onchange = () => { PL.opp = sel.value; sel.classList.toggle('ph', !PL.opp); ['pl_summary', 'pl_chart', 'pl_log'].forEach((n) => dash.draw(n)); };
+  sel.value = PL.opp; sel.onchange = () => { PL.opp = sel.value; sel.classList.toggle('ph', !PL.opp); ['pl_summary', 'pl_chart', 'pl_shots', 'pl_log'].forEach((n) => dash.draw(n)); };
 });
 
 dash.draw('pl_summary', (el) => {
@@ -166,7 +166,7 @@ PL.findPlayers = (team, raw) => {
   return p.filter((r) => PL.fold(r.player).split(' ').some((w) => PL.lev(s, w) <= 2) || PL.lev(s, PL.fold(r.player)) <= 3);
 };
 PL.runQ = () => { PL.lineAuto = true; PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value }; 
-dash.draw('q_out'); dash.draw('q_ou'); };
+dash.draw('q_out'); dash.draw('q_shots'); dash.draw('q_ou'); };
 PL.qPlayer = () => { if (!PL.q.ran) return null; const tm = PL.findTeam(PL.q.t); if (!tm) return null; const f = PL.findPlayers(tm[0], PL.q.p); return f.length === 1 ? f[0] : null; };
 PL.OU = { pts: 'points', reb: 'rebounds', ast: 'assists', pr: 'pts + reb', ar: 'ast + reb', pra: 'pts + reb + ast', tpm: '3-pt made', tpa: '3-pt attempts', stl: 'steals', blk: 'blocks', min: 'minutes' };
 PL.val = (r, k) => (k === 'pra' ? +r.pts + +r.reb + +r.ast : k === 'pr' ? +r.pts + +r.reb : k === 'ar' ? +r.ast + +r.reb : +r[k]);

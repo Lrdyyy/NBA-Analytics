@@ -97,6 +97,7 @@
         <button class="qbtn" id="q-go" type="button">Show</button>
       </div>
       <div data-draw="q_out"></div>
+      <div class="shotwrap" data-draw="q_shots"></div>
       <h3>Over / under, game by game</h3>
       <div class="row">
         <select class="qin" id="q-stat" aria-label="Stat type">
@@ -129,6 +130,8 @@
       </div>
       <div class="chartbox plchart" data-draw="pl_chart"></div>
       <p class="sub">Red = opponent has a top-10 defense · green = bottom-10 defense · dashed line = his last-10 average</p>
+      <h3>Shot chart — where he shoots, his best and weakest spots</h3>
+      <div class="shotwrap" data-draw="pl_shots"></div>
     </section>
 
     <section class="card" id="pl-gamelog">
@@ -388,6 +391,7 @@ document.querySelectorAll('.hb th[data-k]').forEach((th) => th.addEventListener(
 }
 </script>
 <script src="players.js"></script>
+<script src="shots.js"></script>
 <script src="defpos.js"></script>
 <script src="leaders.js"></script>
 <script>
