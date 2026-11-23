@@ -7,7 +7,7 @@
   const f1 = (v) => v.toFixed(1), pc = (v) => v.toFixed(1) + '%';
   const CATS = [
     ['pts', 'Points', (g) => avg(g, 'pts'), f1], ['reb', 'Rebounds', (g) => avg(g, 'reb'), f1], ['ast', 'Assists', (g) => avg(g, 'ast'), f1],
-    ['stl', 'Steals', (g) => avg(g, 'stl'), f1], ['blk', 'Blocks', (g) => avg(g, 'blk'), f1], ['tov', 'Turnovers', (g) => avg(g, 'tov'), f1],
+    ['stl', 'Steals', (g) => avg(g, 'stl'), f1], ['blk', 'Blocks', (g) => avg(g, 'blk'), f1], ['tov', 'Turnovers', (g) => { const t = g.filter((r) => r.tov != null); return t.length >= 2 ? avg(t, 'tov') : null; }, f1],
     ['tpm', '3-pt made', (g) => avg(g, 'tpm'), f1], ['tpa', '3-pt attempts', (g) => avg(g, 'tpa'), f1],
     ['tpp', '3-pt %', (g) => { const a = g.reduce((s, r) => s + Number(r.tpa), 0); return a ? g.reduce((s, r) => s + Number(r.tpm), 0) / a * 100 : null; }, pc, (g) => avg(g, 'tpa') >= MIN_3PA]
   ];
@@ -29,7 +29,8 @@
       if (k === 'tov' && !rows.some((r) => r.tov != null)) { box.append(H.el('div', 'none', "Turnovers aren't in the game data yet.")); grid.append(box); return; }
       const top = pl.filter((p) => !ok || ok(p.g)).map((p) => ({ p, v: val(p.g) })).filter((x) => x.v != null && !isNaN(x.v))
         .sort((a, b) => b.v - a.v || b.p.min - a.p.min).slice(0, 3);
-      if (!top.length) box.append(H.el('div', 'none', 'No qualifying players.'));
+      if (!top.length) box.append(H.el('div', 'none', k === 'tov' ? 'Not enough tracked games yet (needs 2+).' : 'No qualifying players.'));
+      if (k === 'tov' && top.length) { const n = new Set(rows.filter((r) => r.tov != null).map((r) => r.date)).size; box.append(H.el('div', 'none', 'Only games since Nov 19 so far (' + n + ' tracked).')); }
       top.forEach((x, i) => {
         const row = H.el('div', 'p' + (i === 0 ? ' top' : '')); row.append(H.el('span', 'n', String(i + 1)), H.el('span', 'nm', x.p.name), H.el('span', 'v', fmt(x.v))); box.append(row);
       });
