@@ -165,8 +165,8 @@ PL.findPlayers = (team, raw) => {
   const sub = p.filter((r) => PL.fold(r.player).includes(s)); if (sub.length) return sub;
   return p.filter((r) => PL.fold(r.player).split(' ').some((w) => PL.lev(s, w) <= 2) || PL.lev(s, PL.fold(r.player)) <= 3);
 };
-PL.runQ = () => { PL.lineAuto = true; PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value }; 
-dash.draw('q_out'); dash.draw('q_shots'); dash.draw('q_ou'); };
+PL.runQ = () => { PL.lineAuto = true; PL.q = { ran: true, t: document.getElementById('q-team').value, p: document.getElementById('q-player').value, o: document.getElementById('q-opp').value }; 
+dash.draw('q_out'); dash.draw('q_vs'); dash.draw('q_shots'); dash.draw('q_ou'); };
 PL.qPlayer = () => { if (!PL.q.ran) return null; const tm = PL.findTeam(PL.q.t); if (!tm) return null; const f = PL.findPlayers(tm[0], PL.q.p); return f.length === 1 ? f[0] : null; };
 PL.OU = { pts: 'points', reb: 'rebounds', ast: 'assists', pr: 'pts + reb', ar: 'ast + reb', pra: 'pts + reb + ast', tpm: '3-pt made', tpa: '3-pt attempts', stl: 'steals', blk: 'blocks', min: 'minutes' };
 PL.val = (r, k) => (k === 'pra' ? +r.pts + +r.reb + +r.ast : k === 'pr' ? +r.pts + +r.reb : k === 'ar' ? +r.ast + +r.reb : +r[k]);
@@ -215,7 +215,7 @@ dash.draw('q_ou', (el) => {
   el.append(H.el('p', 'sub', 'Green = over the line · red = under · dashed line = your line. Tap a bar for the game.'));
 });
 document.getElementById('q-go').addEventListener('click', PL.runQ);
-['q-team', 'q-player'].forEach((id) => document.getElementById(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') PL.runQ(); }));
+['q-team', 'q-player', 'q-opp'].forEach((id) => document.getElementById(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') PL.runQ(); }));
 
 /* Custom dropdown (replaces <datalist>): opens BELOW the field, scrolls the field into view above the keyboard. */
 (() => {
@@ -256,6 +256,7 @@ document.getElementById('q-go').addEventListener('click', PL.runQ);
     }, true);
   };
   mk('q-team', (q) => PL.TEAMS.filter(([a, n]) => !q || n.toLowerCase().includes(q) || a.toLowerCase().startsWith(q) || Object.entries(PL.ALIAS).some(([k, v]) => v === a && k.includes(q))).map(([, n]) => n));
+  mk('q-opp', (q) => PL.TEAMS.filter(([a, n]) => !q || n.toLowerCase().includes(q) || a.toLowerCase().startsWith(q) || Object.entries(PL.ALIAS).some(([k, v]) => v === a && k.includes(q))).map(([, n]) => n));
   mk('q-player', (q) => {
     const p = H.rows('player_avgs'); if (!p) return [];
     const t = PL.findTeam(document.getElementById('q-team').value || '');
@@ -292,5 +293,34 @@ dash.draw('q_out', (el) => {
   const b = H.el('button', 'qbtn ghost', 'Open in the full player view ↓');
   b.addEventListener('click', () => { PL.team = A.team; PL.sel = A.player; PL.opp = ''; PL.redraw(); dash.draw('pl_roster'); document.getElementById('pl-player').scrollIntoView({ behavior: 'smooth' }); });
   el.append(b);
+});
+
+/* Side by side: his offense (last 10) vs the chosen team's defense (season to date) */
+dash.draw('q_vs', (el) => {
+  el.replaceChildren();
+  const A = PL.qPlayer(); if (!A || !PL.q.o || !PL.q.o.trim()) return;
+  const defs = H.rows('teams'); if (!defs) return;
+  const ot = PL.findTeam(PL.q.o);
+  if (!ot) { el.append(H.el('p', 'qstat bad', `✗ Defense: no team matches “${PL.q.o.trim()}”.`)); return; }
+  if (ot[0] === A.team) { el.append(H.el('p', 'qstat bad', `✗ Defense: ${ot[1]} is ${A.player}'s own team. Pick the team he is facing.`)); return; }
+  const D = defs.find((d) => d.team === ot[0]);
+  if (!D) { el.append(H.el('p', 'qstat bad', `✗ No defense numbers for ${ot[1]} in the data.`)); return; }
+  el.append(H.el('p', 'qstat good', '✓ Defense: ' + ot[1]));
+  const col = (title, sub, rows) => {
+    const c = H.el('div', 'vscol'); c.append(H.el('h3', null, title), H.el('p', 'sub', sub));
+    rows.forEach(([k, v, r]) => { const d = H.el('div', 'vsrow'); d.append(H.el('span', 'k', k), H.el('span', 'v', v)); if (r != null) d.append(H.el('span', 'r', '#' + r)); c.append(d); });
+    return c;
+  };
+  const tpp = A.tpp == null ? 'n/a' : H.P(A.tpp);
+  const grid = H.el('div', 'vsgrid');
+  grid.append(
+    col('Offense · ' + A.player, `${A.team} · last ${A.gp} games, per game`, [['Points', H.N(A.pts)], ['Rebounds', H.N(A.reb)], ['Assists', H.N(A.ast)], ['3-pt made', H.N(A.tpm)], ['3-pt attempts', H.N(A.tpa)], ['3P%', tpp], ['Minutes', H.N(A.min)]]),
+    col('Defense · ' + ot[1], `Season to date, ${D.gp} games · #1 = stingiest of 30`, [['Def. efficiency', H.N(D.drtg), D.drtg_rk], ['Points allowed', H.N(D.pts), D.pts_rk], ['eFG% allowed', H.P(D.efg), D.efg_rk], ['3P% allowed', H.P(D.tpp), D.tpp_rk], ['3-pt made allowed', H.N(D.tpm), D.tpm_rk], ['3PA rate allowed', H.P(D.tpar), D.tpar_rk], ['Blocks', H.N(D.blk), D.blk_rk]])
+  );
+  el.append(grid);
+  const vs = (H.rows('lakers_log') || []).filter((r) => r.player === A.player && r.opp === ot[0]).sort((a, b) => a.date.localeCompare(b.date));
+  el.append(H.el('p', 'sub', vs.length
+    ? `In his last 10, vs ${ot[1]}: ` + vs.map((r) => `${PL.fmtDate(r.date)} ${r.result} · ${r.pts} pts, ${r.reb} reb, ${r.ast} ast, ${r.tpm}-${r.tpa} 3PT, ${r.min} min`).join(' | ')
+    : `He has not played ${ot[1]} in his last 10 games.`));
 });
 }

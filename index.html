@@ -90,13 +90,17 @@
   <div class="catpanel" id="players" data-catpanel="players" hidden>
     <section class="card" id="pl-search">
       <h2>Quick check</h2>
-      <p class="sub">Type a team and a player, then tap Show. If both match, you get his last-10 points, rebounds, assists, threes, steals, blocks and minutes.</p>
+      <p class="sub">Type a team and a player, then tap Show. If both match, you get his last-10 points, rebounds, assists, threes, steals, blocks and minutes. Add a defense to face and you also get his offense next to that team's defense, side by side.</p>
       <div class="row" style="margin-top: var(--cds-gap-sm)">
         <input class="qin" id="q-team" inputmode="none" placeholder="Team (e.g. Spurs or SAS)" aria-label="Team" autocomplete="off">
         <input class="qin" id="q-player" inputmode="none" placeholder="Player (e.g. Wembanyama)" aria-label="Player" autocomplete="off">
+      </div>
+      <div class="row" style="margin-top: var(--cds-gap-sm)">
+        <input class="qin" id="q-opp" inputmode="none" placeholder="Defense to face (optional, e.g. Celtics)" aria-label="Opponent defense" autocomplete="off">
         <button class="qbtn" id="q-go" type="button">Show</button>
       </div>
       <div data-draw="q_out"></div>
+      <div class="vswrap" data-draw="q_vs"></div>
       <div class="shotwrap" data-draw="q_shots"></div>
       <h3>Over / under, game by game</h3>
       <div class="row">
